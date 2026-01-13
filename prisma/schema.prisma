@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  AUTHOR
+  ADMIN
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISH
+  ARCHIVED
+}
+
+enum CommentStatus {
+  PENDING
+  APPROVED
+  SPAM
+}
+
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  username  String    @unique
+  name      String?
+  bio       String?
+  avatar    String?
+  role      Role      @default(USER) // USER, AUTHOR, ADMIN
+  posts     Post[]
+  comments  Comment[]
+  createdAt DateTime  @default(now()) @map("created_at")
+  updated   DateTime  @updatedAt
+
+  @@map("users")
+}
+
+model Post {
+  id          String    @id @default(uuid())
+  title       String
+  slug        String    @unique
+  content     String
+  excerpt     String?
+  featured    Boolean   @default(false)
+  image       String?
+  author      User      @relation(fields: [authorId], references: [id])
+  authorId    String    @map("author_id")
+  comments    Comment[]
+  tags        String[]
+  views       Int       @default(0)
+  status      String    @default("DRAFT") //DRAFT PUBLISH ARCHIVED
+  publishedAt DateTime? @map("published_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("posts")
+}
+
+model Comment {
+  id        String    @id @default(uuid())
+  content   String
+  author    User      @relation(fields: [authorId], references: [id])
+  authorId  String    @map("author_id")
+  post      Post      @relation(fields: [postId], references: [id])
+  postId    String    @map("post_id")
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  parentId  String?   @map("parent_id")
+  replies   Comment[] @relation("CommentReplies")
+  status    String    @default("PENDING") //PENDING, APPROVED, SPAM
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@map("comments")
+}
