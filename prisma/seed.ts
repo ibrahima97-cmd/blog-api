@@ -1,4 +1,4 @@
-import { prisma } from "../../src/lib/prisma";
+import { prisma } from "../src/lib/prisma";
 
 async function main() {
   try {
@@ -269,8 +269,9 @@ async function main() {
   } catch (error) {
     console.error("Error seeding database", error);
     throw error;
-    process.exit(1);
   } finally {
     await prisma.$disconnect();
   }
 }
+
+main();
