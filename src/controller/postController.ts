@@ -7,12 +7,12 @@ const getAllPosts = async (req: Request, res: Response) => {
   try {
     const { status, author, tags, search, page = 1, limit = 10 } = req.query;
 
-    const skip = Number(page) - 1 + Number(limit);
+    const skip = (Number(page) - 1) * Number(limit);
 
     const where: any = {};
 
     if (status) where.status = status;
-    if (author) where.author = Number(author);
+    if (author) where.authorId = Number(author);
     if (tags) where.tags = { has: tags };
     if (search) {
       where.OR = [
@@ -54,7 +54,7 @@ const getAllPosts = async (req: Request, res: Response) => {
       total,
       pages: Math.ceil(total / Number(limit)),
       currentPage: Number(page),
-      data: page,
+      data: posts,
     });
   } catch (error) {
     console.error("Error fetching posts:", error);

@@ -14,6 +14,9 @@ app.use(cors());
 app.use(helmet());
 app.use(morgan("dev"));
 
+// app.use((req, res, next) => {
+//   console.log(`${req.method} ${req.originalUrl}`);
+// });
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -35,7 +38,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/users", userRoutes);
-app.post("/api/post", postRoutes);
+app.use("/api/posts", postRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
