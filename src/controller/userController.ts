@@ -97,4 +97,51 @@ const getUserById = async (req: Request, res: Response) => {
   }
 };
 
-export { getAllUser, getUserById };
+const createUser = async (req: Request, res: Response) => {
+  try {
+    const { email, username, name, bio, avatar } = req.body;
+
+    if (!email || !username) {
+      return res.status(400).json({
+        success: "false",
+        message: "Both email and username are required",
+      });
+    }
+
+    const user = await prisma.user.create({
+      data: { email, username, name, bio, avatar },
+    });
+    res.status(201).json({
+      success: "true",
+      message: "User created successfully",
+      data: user,
+    });
+  } catch (error: any) {
+    console.error("Error creating user:", error);
+
+    if (error.code === "P2002") {
+      res.status(409).json({
+        success: "false",
+        message: "Email or username already exist",
+      });
+    }
+
+    res.status(500).json({
+      success: "false",
+      message: "Failed to create user",
+    });
+    if (error.code === "P2002") {
+      res.status(409).json({
+        success: "false",
+        message: "Email or username already exist",
+      });
+    }
+
+    res.status(500).json({
+      success: "false",
+      message: "Failed to create user",
+    });
+  }
+};
+
+export { getAllUser, getUserById, createUser };
