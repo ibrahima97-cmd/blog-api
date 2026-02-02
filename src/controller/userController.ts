@@ -1,3 +1,4 @@
+import { privateDecrypt } from "node:crypto";
 import { prisma } from "../lib/prisma";
 import type { Request, Response } from "express";
 
@@ -103,7 +104,7 @@ const createUser = async (req: Request, res: Response) => {
 
     if (!email || !username) {
       return res.status(400).json({
-        success: "false",
+        success: false,
         message: "Both email and username are required",
       });
     }
@@ -112,7 +113,7 @@ const createUser = async (req: Request, res: Response) => {
       data: { email, username, name, bio, avatar },
     });
     res.status(201).json({
-      success: "true",
+      success: true,
       message: "User created successfully",
       data: user,
     });
@@ -121,27 +122,97 @@ const createUser = async (req: Request, res: Response) => {
 
     if (error.code === "P2002") {
       res.status(409).json({
-        success: "false",
+        success: false,
         message: "Email or username already exist",
       });
     }
 
     res.status(500).json({
-      success: "false",
+      success: false,
       message: "Failed to create user",
     });
     if (error.code === "P2002") {
       res.status(409).json({
-        success: "false",
+        success: false,
         message: "Email or username already exist",
       });
     }
 
     res.status(500).json({
-      success: "false",
+      success: false,
       message: "Failed to create user",
     });
   }
 };
 
-export { getAllUser, getUserById, createUser };
+const updateUser = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { name, bio, avatar } = req.body;
+
+    if (typeof id !== "string" || id.trim() !== "") {
+      return res.status(500).json({
+        success: false,
+        message: "",
+      });
+    }
+
+    const user = await prisma.user.update({
+      where: { id },
+      data: { name, bio, avatar },
+    });
+    res.json({
+      success: "true",
+      message: "User updated successfully",
+      data: user,
+    });
+  } catch (error: any) {
+    console.error("Error updating user:", error);
+
+    if (error.code === "P2025") {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.status(404).json({
+      success: false,
+      message: "Failed to update user",
+    });
+  }
+};
+
+const deleteUser = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    if (typeof id !== "string" || id.trim() !== "") {
+      return res.status(404).json({
+        succuss: false,
+        message: "User id is required",
+      });
+    }
+    const user = await prisma.user.delete({ where: { id } });
+
+    res.json({
+      success: true,
+      message: "User deleted successfully",
+    });
+  } catch (error: any) {
+    console.error("Error deleting user:", error);
+
+    if (error.code === "P2025") {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete user",
+    });
+  }
+};
+
+export { getAllUser, getUserById, createUser, updateUser, deleteUser };
