@@ -1,7 +1,5 @@
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
-import { title } from "node:process";
-import { count } from "node:console";
 
 const getAllPosts = async (req: Request, res: Response) => {
   try {
@@ -65,4 +63,42 @@ const getAllPosts = async (req: Request, res: Response) => {
   }
 };
 
-export { getAllPosts };
+const getPublishedPosts = async (req: Request, res: Response) => {
+  try {
+    const posts = await prisma.post.findMany({
+      where: { status: "PUBLISHED", publishedAt: { lte: new Date() } },
+      include: {
+        author: {
+          select: {
+            username: true,
+            name: true,
+            avatar: true,
+          },
+        },
+        _count: {
+          select: {
+            comments: true,
+          },
+        },
+      },
+      orderBy: {
+        publishedAt: "desc",
+      },
+    });
+
+    res.json({
+      success: true,
+      count: posts.length,
+      data: posts,
+    });
+  } catch (error) {
+    console.error("Error fetching published post:", error);
+
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch published post",
+    });
+  }
+};
+
+export { getAllPosts, getPublishedPosts };

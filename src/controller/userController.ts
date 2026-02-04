@@ -1,9 +1,9 @@
-import { privateDecrypt } from "node:crypto";
 import { prisma } from "../lib/prisma";
 import type { Request, Response } from "express";
 
 const getAllUser = async (req: Request, res: Response) => {
   try {
+    const { username, name, email, bio } = req.params;
     const users = await prisma.user.findMany({
       select: {
         id: true,
@@ -35,7 +35,7 @@ const getAllUser = async (req: Request, res: Response) => {
 
 const getUserById = async (req: Request, res: Response) => {
   try {
-    const id = req.params.id || undefined;
+    const id = req.params.id;
 
     if (typeof id !== "string" || id.trim() === "") {
       return res.status(404).json({
@@ -91,7 +91,7 @@ const getUserById = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Error fetching user:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: "Failed to fetch data.",
     });
@@ -105,7 +105,7 @@ const createUser = async (req: Request, res: Response) => {
     if (!email || !username) {
       return res.status(400).json({
         success: false,
-        message: "Both email and username are required",
+        error: "Both email and username are required",
       });
     }
 
@@ -121,18 +121,18 @@ const createUser = async (req: Request, res: Response) => {
     console.error("Error creating user:", error);
 
     if (error.code === "P2002") {
-      res.status(409).json({
+      return res.status(409).json({
         success: false,
-        message: "Email or username already exist",
+        error: "Email or username already exist",
       });
     }
 
     res.status(500).json({
       success: false,
-      message: "Failed to create user",
+      error: "Failed to create user",
     });
     if (error.code === "P2002") {
-      res.status(409).json({
+      return res.status(409).json({
         success: false,
         message: "Email or username already exist",
       });
@@ -150,10 +150,10 @@ const updateUser = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { name, bio, avatar } = req.body;
 
-    if (typeof id !== "string" || id.trim() !== "") {
+    if (typeof id !== "string" || id.trim() === "") {
       return res.status(500).json({
         success: false,
-        message: "",
+        message: "User id is required",
       });
     }
 
@@ -170,7 +170,7 @@ const updateUser = async (req: Request, res: Response) => {
     console.error("Error updating user:", error);
 
     if (error.code === "P2025") {
-      res.status(404).json({
+      return res.status(404).json({
         success: false,
         message: "User not found",
       });
@@ -186,7 +186,7 @@ const updateUser = async (req: Request, res: Response) => {
 const deleteUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    if (typeof id !== "string" || id.trim() !== "") {
+    if (typeof id !== "string" || id.trim() === "") {
       return res.status(404).json({
         succuss: false,
         message: "User id is required",
@@ -202,7 +202,7 @@ const deleteUser = async (req: Request, res: Response) => {
     console.error("Error deleting user:", error);
 
     if (error.code === "P2025") {
-      res.status(404).json({
+      return res.status(404).json({
         success: false,
         message: "User not found",
       });
